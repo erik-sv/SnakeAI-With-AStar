@@ -28,3 +28,14 @@ Then finally run the ```agent.py``` file with the command below to begin trainin
 ```sh
 python3 agent.py
 ```
+
+There are optional command line arguments, neither are required:
+
+- ```--logs``` (change the logging level in the terminal. Default none, only shows completed game stats in console)
+    - ```debug``` shows A* engine path logs and Agent moves. Spams the console somewhat.
+    - ```all``` shows all logs, including when the model doesn't make a move but A* does. This spams the console but contains all data.
+- ```--speed``` (change the speed at which the game plays, similar to framerate)
+    - ```50``` for low
+    - ```75``` for medium (Default)
+    - ```200``` for fast
+    - ```500``` to heat your home

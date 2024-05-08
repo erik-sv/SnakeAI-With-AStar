@@ -24,17 +24,18 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 500
 
 class SnakeGameAI:
-    def __init__(self, w=640, h=480):
+    def __init__(self, w=640, h=480, logs="no", speed=75):
         self.w = w
         self.h = h
+        self.logs = logs
         # init display
         self.display = pygame.display.set_mode((self.w, self.h))
         pygame.display.set_caption(f'Snake')
         self.clock = pygame.time.Clock()
-        
+        self.clock.tick(speed)
+        self.speed = speed
         self.path = None
         self.reset()
 
@@ -85,7 +86,8 @@ class SnakeGameAI:
                 [(p.x // BLOCK_SIZE, p.y // BLOCK_SIZE) for p in self.snake],
                 self.w // BLOCK_SIZE, self.h // BLOCK_SIZE)
         
-        print("New path: ", path)
+        if "all" in self.logs or "debug" in self.logs:
+            print("New Engine path:", path)
         
         reward = 0
         game_over = False  
@@ -102,7 +104,8 @@ class SnakeGameAI:
                 if self.is_collision() or self.frame_iteration > 100*len(self.snake):
                     game_over = True
                     reward = -10
-                    print("Game Over!")
+                    if "all" in self.logs:
+                        print("Game Over!")
                     return reward, game_over, self.score
 
                 # 4. place new food or just move
@@ -115,7 +118,7 @@ class SnakeGameAI:
                         
                 # 5. update ui and clocks
                 self._update_ui()
-                self.clock.tick(SPEED)
+                self.clock.tick(self.speed)
         else:
             self._move(self.head.x, self.head.y, action)
             self.snake.insert(0, self.head)
@@ -123,7 +126,8 @@ class SnakeGameAI:
             if self.is_collision() or self.frame_iteration > 100*len(self.snake):
                 game_over = True
                 reward = -10
-                print("Game Over!")
+                if "all" in self.logs:
+                    print("Game Over!")
                 return reward, game_over, self.score
 
             # 4. place new food or just move
@@ -136,7 +140,7 @@ class SnakeGameAI:
             
             # 5. update ui and clocks
             self._update_ui()
-            self.clock.tick(SPEED)  
+            self.clock.tick(self.speed)  
             
         return reward, game_over, self.score
 
@@ -165,12 +169,13 @@ class SnakeGameAI:
         self.display.blit(text, [0, 0])
         pygame.display.flip()
 
-    def _move(self, x, y, action): 
-        # print("Model's action: ", action) # <--- Spams console
-        if action is not None:
+    def _move(self, x, y, action):
+        if "all" in self.logs: # <--- Spams console
             print("Model's action: ", action)
+        if action is not None:
+            if "all" in self.logs or "debug" in self.logs:
+                print("Model's action: ", action)
             self.model_moves += 1
-            # print(self.model_moves) # <--- Spams console
             # [straight, right, left]
             clock_wise = [Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP]
             idx = clock_wise.index(self.direction)
@@ -198,7 +203,8 @@ class SnakeGameAI:
                 y -= BLOCK_SIZE
         else:
             self.engine_moves += 1
-            # print(self.engine_moves)  # <--- Spams console
+            if "all" in self.logs:
+                print(self.engine_moves)  # <--- Spams console
             dx = x - self.head.x
             dy = y - self.head.y
 

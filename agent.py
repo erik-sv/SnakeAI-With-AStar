@@ -2,6 +2,7 @@ import pygame
 import torch
 import random
 import numpy as np
+import argparse
 from collections import deque
 from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
@@ -10,6 +11,12 @@ from helper import plot
 MAX_MEMORY = 500_000
 BATCH_SIZE = 1000
 LR = 0.001
+
+# Define the command-line flags
+parser = argparse.ArgumentParser()
+parser.add_argument('--logs', default="no")
+parser.add_argument('--speed', default=75, type=int)
+args = parser.parse_args()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -103,13 +110,37 @@ class Agent:
         
         return final_move
 
+    # def get_action(self, state, game):
+    #     # random moves: tradeoff exploration / exploitation
+    #     self.epsilon = 80 - self.n_games
+    #     final_move = [0, 0, 0, 0]
+    #     # Use A* if a path is available and randomness allows
+    #     if game.path:
+    #         # Calculate A* path and determine the next move
+    #         if game.direction == Direction.RIGHT: # Move right
+    #             final_move = [0, 1, 0, 0]
+    #         elif game.direction == Direction.LEFT:  # Move left
+    #             final_move = [0, 0, 1, 0]
+    #         elif game.direction == Direction.DOWN:  # Move down
+    #             final_move = [0, 0, 0, 1]
+    #         elif game.direction == Direction.UP:  # Move up
+    #             final_move = [1, 0, 0, 0]
+    #         print(final_move)
+    #     else: 
+    #         state0 = torch.tensor(state, dtype=torch.float)
+    #         prediction = self.model(state0)
+    #         move = torch.argmax(prediction).item()
+    #         final_move[move] = 1
+        
+    #     return final_move
+
 def train():
     plot_scores = []
     plot_mean_scores = []
     total_score = 0
     record = 0
     agent = Agent()
-    game = SnakeGameAI()
+    game = SnakeGameAI(logs=args.logs, speed=args.speed)
     while True:
         model_moves = game.model_moves
         engine_moves = game.engine_moves
@@ -129,8 +160,6 @@ def train():
         
         # remember
         agent.remember(state_old, final_move, reward, state_new, game_over)
-
-        
         
         if game_over:
             # train long memory (replay memory) and plot result
@@ -153,7 +182,7 @@ def train():
             total_score += score
             mean_score = total_score / agent.n_games
             plot_mean_scores.append(mean_score)
-            plot(plot_scores, plot_mean_scores)
+            plot(plot_scores, plot_mean_scores, logs=args.logs)
             
 if __name__ == '__main__':
     train()
