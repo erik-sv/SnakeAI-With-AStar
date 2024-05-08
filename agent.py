@@ -1,3 +1,4 @@
+import pygame
 import torch
 import random
 import numpy as np
@@ -6,7 +7,7 @@ from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
 from helper import plot
 
-MAX_MEMORY = 100_000
+MAX_MEMORY = 500_000
 BATCH_SIZE = 1000
 LR = 0.001
 
@@ -110,6 +111,8 @@ def train():
     agent = Agent()
     game = SnakeGameAI()
     while True:
+        model_moves = game.model_moves
+        engine_moves = game.engine_moves
         # get old state (current)
         state_old = agent.get_state(game)
         
@@ -126,6 +129,8 @@ def train():
         
         # remember
         agent.remember(state_old, final_move, reward, state_new, game_over)
+
+        
         
         if game_over:
             # train long memory (replay memory) and plot result
@@ -140,7 +145,10 @@ def train():
                 agent.model.save()
                 
             print('Game: ', agent.n_games, 'Agent Moves: ', model_moves, 'Engine Moves: ', engine_moves, 'Score: ', score, 'Record: ', record)
-            
+            # set window caption
+            pygame.display.set_caption(f'Game: {agent.n_games} Agent Moves: {model_moves} Engine Moves: {engine_moves} Score: {score} Record: {record}')
+            pygame.display.flip()
+
             plot_scores.append(score)
             total_score += score
             mean_score = total_score / agent.n_games
